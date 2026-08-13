@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="D.Billiard 수구·적구 배치 및 진행 경로 편집기">
+  <title>D.Billiard 배치 편집기</title>
+  <style>
+    :root {
+      --ink: #10221c;
+      --ink-soft: #566760;
+      --paper: #f5f2e9;
+      --surface: #fffdf8;
+      --green: #087554;
+      --green-deep: #07513f;
+      --green-pale: #dcece4;
+      --lime: #c9f269;
+      --line: rgba(16,34,28,.14);
+      --red: #d85849;
+      --shadow: 0 20px 60px rgba(20,40,32,.1);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html { overflow-x: hidden; }
+    body { margin: 0; overflow-x: hidden; color: var(--ink); background: var(--paper); font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif; line-height: 1.55; word-break: keep-all; }
+    button, input, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1380px, calc(100% - 36px)); margin: 0 auto; }
+    .header { border-bottom: 1px solid var(--line); background: rgba(245,242,233,.9); backdrop-filter: blur(16px); }
+    .header-inner { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; font-size: 17px; font-weight: 900; }
+    .brand-mark { position: relative; width: 32px; height: 32px; border-radius: 50%; background: var(--green-deep); box-shadow: inset 0 0 0 6px var(--green); }
+    .brand-mark::after { content: "D"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--lime); font-size: 13px; }
+    .back-link { color: var(--ink-soft); font-size: 13px; font-weight: 800; }
+    .back-link:hover { color: var(--green); }
+    main { padding: 52px 0 80px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 32px; }
+    .eyebrow { margin: 0 0 10px; color: var(--green); font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+    h1 { margin: 0; font-size: clamp(36px, 5vw, 62px); line-height: 1; letter-spacing: -.055em; }
+    .intro p:last-child { max-width: 540px; margin: 16px 0 0; color: var(--ink-soft); font-size: 15px; }
+    .save-state { display: flex; align-items: center; gap: 9px; color: var(--ink-soft); font-size: 12px; }
+    .save-dot { width: 8px; height: 8px; border-radius: 50%; background: #a1aea9; }
+    .save-state.saved .save-dot { background: var(--green); box-shadow: 0 0 0 5px rgba(8,117,84,.12); }
+
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 8px 25px rgba(20,40,32,.05); }
+    .tool-group { display: flex; align-items: center; gap: 7px; padding-right: 10px; border-right: 1px solid var(--line); }
+    .tool-group:last-child { margin-left: auto; padding-right: 0; border-right: 0; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--ink); font-size: 12px; font-weight: 900; cursor: pointer; transition: background 150ms ease, color 150ms ease, border-color 150ms ease, transform 150ms ease; }
+    .btn:hover { border-color: var(--green); color: var(--green); transform: translateY(-1px); }
+    .btn.active, .btn.primary { border-color: var(--green-deep); background: var(--green-deep); color: white; }
+    .btn.active:hover, .btn.primary:hover { color: white; background: var(--green); }
+    .btn.danger { color: var(--red); }
+    .btn:disabled { opacity: .38; cursor: not-allowed; transform: none; }
+    .icon { width: 18px; font-size: 15px; text-align: center; }
+
+    .workspace { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
+    .board-card, .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+    .board-card { min-width: 0; overflow: hidden; }
+    .board-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .board-head b { font-size: 13px; }
+    .mode-guide { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 11px; }
+    .mode-guide::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .canvas-shell { position: relative; padding: 24px; background: #e9e4d8; }
+    #tableCanvas { display: block; width: 100%; aspect-ratio: 1.906 / 1; border-radius: 4px; touch-action: none; cursor: grab; box-shadow: 0 15px 34px rgba(31,24,18,.14); }
+    #tableCanvas.path-mode { cursor: crosshair; }
+    #tableCanvas.dragging { cursor: grabbing; }
+    .canvas-tip { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; color: var(--ink-soft); font-size: 11px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 15px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 10px; height: 10px; border: 1px solid rgba(0,0,0,.15); border-radius: 50%; }
+    .legend .cue { background: #fffdf1; }.legend .first { background: var(--red); }.legend .second { background: #f2c84b; }
+    .spin-editor { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); border-top: 1px solid var(--line); background: var(--surface); }
+    .shot-control { min-width: 0; display: grid; grid-template-columns: 190px 1fr; align-items: center; gap: 22px; padding: 24px; }
+    .shot-control + .shot-control { border-left: 1px solid var(--line); }
+    .spin-canvas-wrap { position: relative; width: 190px; height: 190px; margin: 0 auto; }
+    #spinCanvas { display: block; width: 190px; height: 190px; touch-action: none; cursor: crosshair; }
+    .thickness-canvas-wrap { position: relative; width: 190px; height: 190px; margin: 0 auto; }
+    #thicknessCanvas { display: block; width: 190px; height: 190px; touch-action: none; cursor: ew-resize; }
+    .spin-copy .eyebrow { margin-bottom: 7px; }
+    .spin-copy h3 { margin: 0 0 8px; font-size: 20px; letter-spacing: -.03em; }
+    .spin-copy p { max-width: 550px; margin: 0; color: var(--ink-soft); font-size: 12px; }
+    .spin-value { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 17px; }
+    .spin-readout { min-width: 185px; padding: 10px 12px; border-radius: 9px; background: var(--green-pale); color: var(--green-deep); font-size: 11px; font-weight: 900; }
+    .spin-reset { min-height: 38px; padding: 0 13px; border: 1px solid var(--line); border-radius: 9px; background: transparent; color: var(--ink); font-size: 11px; font-weight: 900; cursor: pointer; }
+    .spin-reset:hover { border-color: var(--green); color: var(--green); }
+
+    .side { display: grid; gap: 12px; }
+    .panel { padding: 20px; }
+    .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 17px; }
+    .panel-title h2 { margin: 0; font-size: 15px; letter-spacing: -.02em; }
+    .panel-title span { color: var(--ink-soft); font-size: 10px; font-weight: 800; }
+    .field { display: grid; gap: 7px; margin-bottom: 15px; }
+    .field:last-child { margin-bottom: 0; }
+    label { color: var(--ink-soft); font-size: 11px; font-weight: 900; }
+    input[type="text"], textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; outline: 0; background: var(--paper); color: var(--ink); font-size: 13px; transition: border-color 150ms ease, box-shadow 150ms ease; }
+    input[type="text"] { height: 42px; padding: 0 12px; }
+    textarea { min-height: 110px; padding: 11px 12px; resize: vertical; }
+    input:focus, textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(8,117,84,.1); }
+    .coordinate-list { display: grid; gap: 8px; }
+    .coordinate-row { display: grid; grid-template-columns: 28px 1fr; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; background: var(--paper); }
+    .ball-chip { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid rgba(0,0,0,.14); border-radius: 50%; font-size: 9px; font-weight: 900; }
+    .ball-chip.cue { background: #fffdf1; }.ball-chip.first { background: var(--red); color: white; }.ball-chip.second { background: #f2c84b; }
+    .coordinate-row p { margin: 0; font-size: 11px; font-weight: 800; }
+    .coordinate-row span { color: var(--ink-soft); }
+    .route-list { max-height: 188px; overflow: auto; display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .route-list li { display: grid; grid-template-columns: 23px 1fr; align-items: center; gap: 8px; min-height: 34px; padding: 5px 8px; border-radius: 8px; background: var(--paper); color: var(--ink-soft); font-size: 11px; }
+    .route-list b { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: var(--green-pale); color: var(--green); font-size: 9px; }
+    .route-list li.first-route b { background: #dceaf7; color: #2477c9; }
+    .route-heading { display: flex !important; grid-template-columns: none !important; justify-content: space-between; margin-top: 4px; background: transparent !important; color: var(--ink) !important; font-weight: 900; }
+    .route-heading span:last-child { color: var(--ink-soft); font-size: 9px; }
+    .empty-route { padding: 16px !important; text-align: center; display: block !important; }
+    .file-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .file-actions .btn { width: 100%; }
+    #fileInput { display: none; }
+    .help { margin-top: 16px; padding: 16px 18px; border: 1px dashed rgba(8,117,84,.3); border-radius: 14px; background: rgba(220,236,228,.45); }
+    .help b { display: block; margin-bottom: 7px; color: var(--green); font-size: 12px; }
+    .help p { margin: 0; color: var(--ink-soft); font-size: 11px; }
+
+    .toast { position: fixed; z-index: 50; right: 22px; bottom: 22px; max-width: calc(100% - 44px); padding: 13px 17px; border-radius: 12px; background: var(--ink); color: white; box-shadow: var(--shadow); font-size: 12px; font-weight: 800; opacity: 0; transform: translateY(14px); pointer-events: none; transition: opacity 180ms ease, transform 180ms ease; }
+    .toast.show { opacity: 1; transform: none; }
+
+    @media (max-width: 1040px) {
+      .workspace { grid-template-columns: 1fr; }
+      .side { grid-template-columns: repeat(2, 1fr); }
+      .side .panel:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 720px) {
+      body { word-break: normal; }
+      .container { width: min(100% - 22px, 1380px); }
+      main { padding-top: 32px; }
+      .intro { display: block; }
+      .save-state { margin-top: 18px; }
+      .toolbar { display: grid; grid-template-columns: 1fr; align-items: stretch; }
+      .tool-group { width: 100%; min-width: 0; padding-right: 0; border-right: 0; }
+      .tool-group:last-child { margin-left: 0; }
+      .tool-group .btn { flex: 1; padding: 0 9px; }
+      .canvas-shell { padding: 10px; }
+      .canvas-tip { align-items: flex-start; flex-direction: column; }
+      .spin-editor { grid-template-columns: 1fr; text-align: center; }
+      .shot-control { grid-template-columns: 1fr; gap: 16px; padding: 24px 18px; }
+      .shot-control + .shot-control { border-left: 0; border-top: 1px solid var(--line); }
+      .spin-copy p { margin-inline: auto; }
+      .spin-value { justify-content: center; }
+      .side { grid-template-columns: 1fr; }
+      .side .panel:last-child { grid-column: auto; }
+      .back-link span { display: none; }
+    }
+    @media (max-width: 430px) {
+      .toolbar .icon { display: none; }
+      .board-head { align-items: flex-start; flex-direction: column; }
+      .file-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"></span><span>D.Billiard</span></a>
+      <a class="back-link" href="index.html">← <span>레슨 시스템으로 돌아가기</span></a>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="intro">
+        <div>
+          <p class="eyebrow">LAYOUT PATH EDITOR</p>
+          <h1>배치 편집기</h1>
+          <p>공을 드래그해 배치한 뒤 수구·1적구 경로를 따로 그리세요. 공 표면에서 실제로 맞힐 지점을 클릭하면 그 두께 위치까지 선이 연결됩니다.</p>
+        </div>
+        <div class="save-state" id="saveState"><span class="save-dot"></span><span id="saveText">변경 내용이 저장되지 않았습니다</span></div>
+      </div>
+
+      <div class="toolbar" aria-label="배치 편집 도구">
+        <div class="tool-group">
+          <button class="btn active" id="moveMode" type="button"><span class="icon">↔</span>공 이동</button>
+          <button class="btn" id="cuePathMode" type="button"><span class="icon">✦</span>수구 경로</button>
+          <button class="btn" id="firstPathMode" type="button"><span class="icon">✦</span>1적구 경로</button>
+        </div>
+        <div class="tool-group">
+          <button class="btn" id="finishPath" type="button"><span class="icon">✓</span>경로 완성</button>
+          <button class="btn" id="undoPoint" type="button"><span class="icon">↶</span>한 점 취소</button>
+          <button class="btn danger" id="clearPath" type="button"><span class="icon">×</span>선택 경로 지우기</button>
+        </div>
+        <div class="tool-group">
+          <button class="btn" id="resetAll" type="button"><span class="icon">↺</span>전체 초기화</button>
+        </div>
+        <div class="tool-group">
+          <button class="btn primary" id="localSave" type="button"><span class="icon">●</span>브라우저 저장</button>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <section class="board-card">
+          <div class="board-head"><b id="boardTitle">3쿠션 초구 배치</b><span class="mode-guide" id="modeGuide">공을 눌러 원하는 위치로 드래그하세요.</span></div>
+          <div class="canvas-shell"><canvas id="tableCanvas" aria-label="수구, 1적구, 2적구와 진행 경로를 편집하는 당구대"></canvas></div>
+          <div class="spin-editor">
+            <div class="shot-control">
+              <div class="spin-canvas-wrap"><canvas id="spinCanvas" width="380" height="380" aria-label="수구의 당점을 자유롭게 지정하는 선택기"></canvas></div>
+              <div class="spin-copy">
+                <p class="eyebrow">CUE BALL CONTACT POINT</p>
+                <h3>당점 설정</h3>
+                <p>수구 위의 원하는 지점을 클릭하거나 드래그하세요.</p>
+                <div class="spin-value"><div class="spin-readout" id="spinReadout">중심 · X 0.00 / Y 0.00</div><button class="spin-reset" id="spinReset" type="button">중심으로 초기화</button></div>
+              </div>
+            </div>
+            <div class="shot-control">
+              <div class="thickness-canvas-wrap"><canvas id="thicknessCanvas" width="380" height="380" aria-label="빨간 1적구에 맞힐 두께를 자유롭게 지정하는 선택기"></canvas></div>
+              <div class="spin-copy">
+                <p class="eyebrow">FIRST OBJECT BALL THICKNESS</p>
+                <h3>1적구 두께</h3>
+                <p>반투명 수구를 좌우로 드래그해 빨간 공과 겹치는 두께를 정하세요.</p>
+                <div class="spin-value"><div class="spin-readout" id="thicknessReadout">좌측 1/2 두께 · 50%</div><button class="spin-reset" id="thicknessReset" type="button">1/2로 초기화</button></div>
+              </div>
+            </div>
+          </div>
+          <div class="canvas-tip">
+            <div class="legend"><span><i class="cue"></i>수구</span><span><i class="first"></i>1적구</span><span><i class="second"></i>2적구</span></div>
+            <span>좌표 기준: 좌측 상단 0,0 · 우측 하단 100,50</span>
+          </div>
+        </section>
+
+        <aside class="side">
+          <section class="panel">
+            <div class="panel-title"><h2>배치 정보</h2><span>INFO</span></div>
+            <div class="field"><label for="layoutName">배치 이름</label><input id="layoutName" type="text" value="3쿠션 초구 배치" maxlength="60"></div>
+            <div class="field"><label for="memo">코치 메모</label><textarea id="memo" maxlength="1000" placeholder="두께, 당점, 스트로크, 주의할 점 등을 적어주세요."></textarea></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title"><h2>공 위치</h2><span>COORDINATES</span></div>
+            <div class="coordinate-list">
+              <div class="coordinate-row"><span class="ball-chip cue">수</span><p>수구 <span id="cueCoord">X 25.0 · Y 31.4</span></p></div>
+              <div class="coordinate-row"><span class="ball-chip first">1</span><p>1적구 <span id="firstCoord">X 75.0 · Y 25.0</span></p></div>
+              <div class="coordinate-row"><span class="ball-chip second">2</span><p>2적구 <span id="secondCoord">X 25.0 · Y 25.0</span></p></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title"><h2>진행 경로</h2><span id="pointCount">수구 0 · 1적구 0</span></div>
+            <ol class="route-list" id="routeList"><li class="empty-route">수구 또는 1적구 경로를 선택해 주세요.</li></ol>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title"><h2>저장 및 불러오기</h2><span>EXPORT</span></div>
+            <div class="file-actions">
+              <button class="btn primary" id="savePng" type="button">PNG 이미지 저장</button>
+              <button class="btn" id="saveJson" type="button">배치 파일 저장</button>
+              <button class="btn" id="loadJson" type="button">배치 파일 불러오기</button>
+              <input id="fileInput" type="file" accept="application/json,.json">
+            </div>
+            <div class="help"><b>Codex에 전달하는 방법</b><p>PNG 이미지 또는 배치 JSON 파일을 올리고 “이 배치대로 HTML의 옆돌리기를 수정해줘”라고 요청하면 됩니다.</p></div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const canvas = document.getElementById('tableCanvas');
+    const ctx = canvas.getContext('2d');
+    const spinCanvas = document.getElementById('spinCanvas');
+    const spinCtx = spinCanvas.getContext('2d');
+    const thicknessCanvas = document.getElementById('thicknessCanvas');
+    const thicknessCtx = thicknessCanvas.getContext('2d');
+    const defaultState = () => ({
+      version: 6,
+      name: '3쿠션 초구 배치',
+      memo: '',
+      balls: {
+        cue: { x: 25, y: 31.43 },
+        first: { x: 75, y: 25 },
+        second: { x: 25, y: 25 }
+      },
+      spin: { x: 0, y: 0 },
+      thickness: { offset: -0.5 },
+      cuePath: [],
+      firstPath: []
+    });
+    let state = defaultState();
+    let mode = 'move';
+    let activePathKey = 'cuePath';
+    let draggingBall = null;
+    let viewWidth = 1000;
+    let viewHeight = 525;
+    let spinViewSize = 190;
+    let spinDragging = false;
+    let thicknessViewSize = 190;
+    let thicknessDragging = false;
+    let toastTimer;
+
+    const ballMeta = {
+      cue: { name: '수구', fill: '#fffdf1' },
+      first: { name: '1적구', fill: '#d85849' },
+      second: { name: '2적구', fill: '#f2c84b' }
+    };
+
+    function boardMetrics(width = viewWidth, height = viewHeight, offsetX = 0, offsetY = 0) {
+      const rail = Math.max(8, Math.min(width, height) * .046);
+      return { x: offsetX, y: offsetY, width, height, rail, left: offsetX + rail, top: offsetY + rail, playWidth: width - rail * 2, playHeight: height - rail * 2 };
+    }
+
+    function toPixel(point, metrics) {
+      return { x: metrics.left + (point.x / 100) * metrics.playWidth, y: metrics.top + (point.y / 50) * metrics.playHeight };
+    }
+
+    function toCoordinate(x, y, metrics) {
+      return { x: Math.max(0, Math.min(100, ((x - metrics.left) / metrics.playWidth) * 100)), y: Math.max(0, Math.min(50, ((y - metrics.top) / metrics.playHeight) * 50)) };
+    }
+
+    function roundRect(context, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      context.beginPath();
+      context.moveTo(x + r, y);
+      context.arcTo(x + width, y, x + width, y + height, r);
+      context.arcTo(x + width, y + height, x, y + height, r);
+      context.arcTo(x, y + height, x, y, r);
+      context.arcTo(x, y, x + width, y, r);
+      context.closePath();
+    }
+
+    function ballRadiusFor(width) {
+      return Math.max(10, width * .013);
+    }
+
+    function toPathPixel(point, metrics) {
+      if (!point.anchor) return toPixel(point, metrics);
+      const center = toPixel(state.balls[point.anchor], metrics);
+      if (!point.contact) return center;
+      const radius = ballRadiusFor(metrics.width);
+      return { x: center.x + point.contact.nx * radius, y: center.y + point.contact.ny * radius };
+    }
+
+    function drawArrow(context, from, to, scale = 1) {
+      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      const length = 10 * scale;
+      context.beginPath();
+      context.moveTo(to.x, to.y);
+      context.lineTo(to.x - length * Math.cos(angle - Math.PI / 6), to.y - length * Math.sin(angle - Math.PI / 6));
+      context.moveTo(to.x, to.y);
+      context.lineTo(to.x - length * Math.cos(angle + Math.PI / 6), to.y - length * Math.sin(angle + Math.PI / 6));
+      context.stroke();
+    }
+
+    function drawScene(context, metrics, options = {}) {
+      const { x, y, width, height, rail, left, top, playWidth, playHeight } = metrics;
+      context.save();
+      roundRect(context, x, y, width, height, Math.max(3, rail * .08));
+      context.fillStyle = '#eeeeec';
+      context.fill();
+      context.strokeStyle = '#8c918f';
+      context.lineWidth = Math.max(1.2, width * .0013);
+      context.stroke();
+      context.beginPath();
+      context.rect(left, top, playWidth, playHeight);
+      context.fillStyle = '#d7eee7';
+      context.fill();
+      context.strokeStyle = '#858b88';
+      context.lineWidth = Math.max(1.2, width * .0012);
+      context.stroke();
+
+      context.save();
+      context.strokeStyle = 'rgba(7,81,63,.14)';
+      context.lineWidth = Math.max(.7, width * .0008);
+      for (let index = 1; index < 8; index += 1) {
+        const gridX = left + playWidth * (index / 8);
+        context.beginPath();
+        context.moveTo(gridX, top);
+        context.lineTo(gridX, top + playHeight);
+        context.stroke();
+      }
+      for (let index = 1; index < 4; index += 1) {
+        const gridY = top + playHeight * (index / 4);
+        context.beginPath();
+        context.moveTo(left, gridY);
+        context.lineTo(left + playWidth, gridY);
+        context.stroke();
+      }
+      context.restore();
+
+      const tickColor = '#828785';
+      context.strokeStyle = tickColor;
+      context.lineWidth = Math.max(1, width * .001);
+      for (let index = 0; index <= 80; index += 1) {
+        const tickX = left + playWidth * (index / 80);
+        const major = index % 10 === 0;
+        const tickLength = rail * (major ? .5 : .34);
+        context.beginPath();
+        context.moveTo(tickX, top);
+        context.lineTo(tickX, top - tickLength);
+        context.moveTo(tickX, top + playHeight);
+        context.lineTo(tickX, top + playHeight + tickLength);
+        context.stroke();
+      }
+      for (let index = 0; index <= 40; index += 1) {
+        const tickY = top + playHeight * (index / 40);
+        const major = index % 10 === 0;
+        const tickLength = rail * (major ? .5 : .34);
+        context.beginPath();
+        context.moveTo(left, tickY);
+        context.lineTo(left - tickLength, tickY);
+        context.moveTo(left + playWidth, tickY);
+        context.lineTo(left + playWidth + tickLength, tickY);
+        context.stroke();
+      }
+      const diamondRadius = Math.max(2.2, rail * .11);
+      context.fillStyle = '#7d8380';
+      for (let index = 0; index <= 8; index += 1) {
+        const dotX = left + playWidth * (index / 8);
+        [y + rail * .5, y + height - rail * .5].forEach(dotY => { context.beginPath(); context.arc(dotX,dotY,diamondRadius,0,Math.PI*2); context.fill(); });
+      }
+      for (let index = 0; index <= 4; index += 1) {
+        const dotY = top + playHeight * (index / 4);
+        [x + rail * .5, x + width - rail * .5].forEach(dotX => { context.beginPath(); context.arc(dotX,dotY,diamondRadius,0,Math.PI*2); context.fill(); });
+      }
+
+      function drawMovementPath(path, color, pointFill, pointText) {
+        if (path.length <= 1) return;
+        const points = path.map(point => toPathPixel(point, metrics));
+        context.save();
+        context.strokeStyle = color;
+        context.lineWidth = Math.max(1.15, width * .00155);
+        context.setLineDash([Math.max(1.2, width * .0014), Math.max(2.4, width * .0028)]);
+        context.lineCap = 'round';
+        context.lineJoin = 'round';
+        context.beginPath();
+        context.moveTo(points[0].x, points[0].y);
+        points.slice(1).forEach(point => context.lineTo(point.x, point.y));
+        context.stroke();
+        context.setLineDash([]);
+        points.slice(1).forEach((point, index) => drawArrow(context, points[index], point, Math.max(.65, width / 1200)));
+        context.restore();
+
+        if (!options.clean) {
+          points.forEach((point, index) => {
+            if (path[index].anchor && !path[index].contact) return;
+            context.beginPath();
+            context.arc(point.x, point.y, path[index].contact ? Math.max(3, width * .0038) : Math.max(6, width * .008), 0, Math.PI * 2);
+            context.fillStyle = pointFill;
+            context.fill();
+            if (path[index].contact) return;
+            context.fillStyle = pointText;
+            context.font = `900 ${Math.max(8, width * .0085)}px system-ui`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(String(index), point.x, point.y + .5);
+          });
+        }
+      }
+      drawMovementPath(state.cuePath, '#2b302e', '#c9f269', '#07513f');
+      drawMovementPath(state.firstPath, '#2477c9', '#dceaf7', '#15568f');
+
+      const ballRadius = ballRadiusFor(width);
+      Object.entries(state.balls).forEach(([key, ball]) => {
+        const pos = toPixel(ball, metrics);
+        context.save();
+        context.shadowColor = 'rgba(0,0,0,.28)';
+        context.shadowBlur = ballRadius * .45;
+        context.shadowOffsetY = ballRadius * .25;
+        context.beginPath();
+        context.arc(pos.x, pos.y, ballRadius, 0, Math.PI * 2);
+        context.fillStyle = ballMeta[key].fill;
+        context.fill();
+        context.restore();
+        context.beginPath();
+        context.arc(pos.x - ballRadius * .3, pos.y - ballRadius * .32, ballRadius * .16, 0, Math.PI * 2);
+        context.fillStyle = 'rgba(255,255,255,.55)';
+        context.fill();
+        const spotColor = key === 'first' ? '#fffdf1' : '#c93636';
+        const spots = [[0,0,1],[-.42,-.3,.7],[.42,.3,.7]];
+        spots.forEach(([sx, sy, size]) => {
+          context.beginPath();
+          context.arc(pos.x + ballRadius * sx, pos.y + ballRadius * sy, ballRadius * .105 * size, 0, Math.PI * 2);
+          context.fillStyle = spotColor;
+          context.fill();
+        });
+      });
+      context.restore();
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      viewWidth = rect.width;
+      viewHeight = rect.height;
+      canvas.width = Math.round(viewWidth * dpr);
+      canvas.height = Math.round(viewHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, viewWidth, viewHeight);
+      drawScene(ctx, boardMetrics());
+    }
+
+    function drawSpinDiagram(context, centerX, centerY, radius, spin, clean = false) {
+      context.save();
+      context.beginPath();
+      context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      context.fillStyle = '#fffdf4';
+      context.fill();
+      context.strokeStyle = '#8b9691';
+      context.lineWidth = Math.max(1.2, radius * .018);
+      context.stroke();
+      context.save();
+      context.beginPath();
+      context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      context.clip();
+      context.strokeStyle = 'rgba(7,81,63,.18)';
+      context.lineWidth = Math.max(.7, radius * .01);
+      [1/3, 2/3].forEach(portion => {
+        context.beginPath();
+        context.arc(centerX, centerY, radius * portion, 0, Math.PI * 2);
+        context.stroke();
+      });
+      for (let index = 0; index < 16; index += 1) {
+        const angle = (Math.PI * 2 * index) / 16;
+        context.beginPath();
+        context.moveTo(centerX, centerY);
+        context.lineTo(centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius);
+        context.stroke();
+      }
+      context.restore();
+      context.beginPath();
+      context.arc(centerX, centerY, Math.max(2.5, radius * .035), 0, Math.PI * 2);
+      context.fillStyle = 'rgba(7,81,63,.42)';
+      context.fill();
+      const pointX = centerX + spin.x * radius;
+      const pointY = centerY - spin.y * radius;
+      context.beginPath();
+      context.arc(pointX, pointY, Math.max(6, radius * .085), 0, Math.PI * 2);
+      context.fillStyle = '#d83d36';
+      context.fill();
+      context.strokeStyle = '#ffffff';
+      context.lineWidth = Math.max(2, radius * .028);
+      context.stroke();
+      if (!clean) {
+        context.beginPath();
+        context.arc(pointX, pointY, Math.max(10, radius * .14), 0, Math.PI * 2);
+        context.strokeStyle = 'rgba(216,61,54,.22)';
+        context.lineWidth = Math.max(3, radius * .045);
+        context.stroke();
+      }
+      context.restore();
+    }
+
+    function resizeSpinCanvas() {
+      const rect = spinCanvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      spinViewSize = rect.width;
+      spinCanvas.width = Math.round(rect.width * dpr);
+      spinCanvas.height = Math.round(rect.height * dpr);
+      spinCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawSpin();
+    }
+
+    function drawSpin() {
+      spinCtx.clearRect(0, 0, spinViewSize, spinViewSize);
+      drawSpinDiagram(spinCtx, spinViewSize / 2, spinViewSize / 2, spinViewSize * .43, state.spin);
+    }
+
+    function spinLabel(spin) {
+      const horizontal = spin.x < -.12 ? '좌' : spin.x > .12 ? '우' : '';
+      const vertical = spin.y > .12 ? '상단' : spin.y < -.12 ? '하단' : '';
+      const direction = horizontal || vertical ? `${horizontal}${vertical || '중단'}` : '중심';
+      return `${direction} · X ${spin.x >= 0 ? '+' : ''}${spin.x.toFixed(2)} / Y ${spin.y >= 0 ? '+' : ''}${spin.y.toFixed(2)}`;
+    }
+
+    function setSpinFromPointer(event) {
+      const rect = spinCanvas.getBoundingClientRect();
+      const center = rect.width / 2;
+      const radius = rect.width * .43;
+      let x = (event.clientX - rect.left - center) / radius;
+      let y = -(event.clientY - rect.top - center) / radius;
+      const distance = Math.hypot(x, y);
+      if (distance > 1) { x /= distance; y /= distance; }
+      state.spin = { x: Number(x.toFixed(4)), y: Number(y.toFixed(4)) };
+      markChanged();
+      document.getElementById('spinReadout').textContent = spinLabel(state.spin);
+      drawSpin();
+    }
+
+    function thicknessInfo(thickness) {
+      const amount = Math.max(0, 1 - Math.abs(thickness.offset));
+      const presets = [
+        { value: 1, label: '1/1' },
+        { value: .75, label: '3/4' },
+        { value: .5, label: '1/2' },
+        { value: .25, label: '1/4' },
+        { value: .125, label: '1/8' },
+        { value: 0, label: '극단적으로 얇은' }
+      ];
+      const nearest = presets.reduce((best, item) => Math.abs(item.value - amount) < Math.abs(best.value - amount) ? item : best);
+      const side = Math.abs(thickness.offset) < .035 ? '정면' : thickness.offset < 0 ? '좌측' : '우측';
+      return { amount, side, label: nearest.label, text: `${side} ${nearest.label} 두께 · ${Math.round(amount * 100)}%` };
+    }
+
+    function drawThicknessDiagram(context, centerX, centerY, radius, thickness, clean = false) {
+      const info = thicknessInfo(thickness);
+      const cueX = centerX + thickness.offset * radius * 2;
+      context.save();
+      context.strokeStyle = 'rgba(16,34,28,.14)';
+      context.lineWidth = Math.max(1, radius * .018);
+      context.beginPath();
+      context.moveTo(centerX - radius * 2.25, centerY + radius * 1.55);
+      context.lineTo(centerX + radius * 2.25, centerY + radius * 1.55);
+      context.stroke();
+      [-1,-.75,-.5,-.25,0,.25,.5,.75,1].forEach(value => {
+        const tickX = centerX + value * radius * 2;
+        context.beginPath();
+        context.moveTo(tickX, centerY + radius * 1.46);
+        context.lineTo(tickX, centerY + radius * 1.64);
+        context.stroke();
+      });
+      context.beginPath();
+      context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      context.fillStyle = '#d85849';
+      context.fill();
+      context.strokeStyle = '#a92f2a';
+      context.lineWidth = Math.max(1.5, radius * .035);
+      context.stroke();
+      const redSpot = '#fffdf1';
+      [[0,0,1],[-.42,-.3,.7],[.42,.3,.7]].forEach(([sx,sy,size]) => {
+        context.beginPath();
+        context.arc(centerX + radius * sx, centerY + radius * sy, radius * .09 * size, 0, Math.PI * 2);
+        context.fillStyle = redSpot;
+        context.fill();
+      });
+      context.beginPath();
+      context.arc(cueX, centerY, radius, 0, Math.PI * 2);
+      context.fillStyle = 'rgba(255,253,244,.62)';
+      context.fill();
+      context.strokeStyle = '#42524c';
+      context.lineWidth = Math.max(1.4, radius * .032);
+      context.stroke();
+      context.beginPath();
+      context.arc(cueX, centerY, Math.max(2.5, radius * .07), 0, Math.PI * 2);
+      context.fillStyle = '#c93636';
+      context.fill();
+      const contactX = centerX + Math.sign(thickness.offset || -1) * radius;
+      context.beginPath();
+      context.arc(contactX, centerY, Math.max(3.5, radius * .085), 0, Math.PI * 2);
+      context.fillStyle = '#07513f';
+      context.fill();
+      if (!clean) {
+        context.fillStyle = '#566760';
+        context.font = `800 ${Math.max(9, radius * .22)}px system-ui`;
+        context.textAlign = 'center';
+        context.fillText(`${Math.round(info.amount * 100)}%`, centerX, centerY + radius * 2.05);
+      }
+      context.restore();
+    }
+
+    function resizeThicknessCanvas() {
+      const rect = thicknessCanvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      thicknessViewSize = rect.width;
+      thicknessCanvas.width = Math.round(rect.width * dpr);
+      thicknessCanvas.height = Math.round(rect.height * dpr);
+      thicknessCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawThickness();
+    }
+
+    function drawThickness() {
+      thicknessCtx.clearRect(0, 0, thicknessViewSize, thicknessViewSize);
+      drawThicknessDiagram(thicknessCtx, thicknessViewSize / 2, thicknessViewSize * .44, thicknessViewSize * .19, state.thickness);
+    }
+
+    function setThicknessFromPointer(event) {
+      const rect = thicknessCanvas.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const radius = rect.width * .19;
+      const offset = Math.max(-1, Math.min(1, (event.clientX - rect.left - centerX) / (radius * 2)));
+      state.thickness = { offset: Number(offset.toFixed(4)) };
+      markChanged();
+      document.getElementById('thicknessReadout').textContent = thicknessInfo(state.thickness).text;
+      drawThickness();
+    }
+
+    function getPointer(event) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    }
+
+    function hitBall(pointer, generousTarget = true) {
+      const metrics = boardMetrics();
+      const radius = generousTarget ? Math.max(18, viewWidth * .026) : ballRadiusFor(viewWidth) + 4;
+      return Object.keys(state.balls).find(key => {
+        const point = toPixel(state.balls[key], metrics);
+        return Math.hypot(pointer.x - point.x, pointer.y - point.y) <= radius;
+      }) || null;
+    }
+
+    function snapPoint(pointer) {
+      const metrics = boardMetrics();
+      const ballHit = hitBall(pointer, false);
+      if (ballHit) {
+        const center = toPixel(state.balls[ballHit], metrics);
+        const dx = pointer.x - center.x;
+        const dy = pointer.y - center.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 1.5) return { anchor: ballHit };
+        return { anchor: ballHit, contact: { nx: Number((dx / distance).toFixed(4)), ny: Number((dy / distance).toFixed(4)) } };
+      }
+      const coordinate = toCoordinate(pointer.x, pointer.y, metrics);
+      const railSnap = 2.2;
+      if (coordinate.x < railSnap) coordinate.x = 0;
+      if (coordinate.x > 100 - railSnap) coordinate.x = 100;
+      if (coordinate.y < railSnap) coordinate.y = 0;
+      if (coordinate.y > 50 - railSnap) coordinate.y = 50;
+      return { x: Number(coordinate.x.toFixed(2)), y: Number(coordinate.y.toFixed(2)) };
+    }
+
+    function addPathPoint(pointer) {
+      const path = state[activePathKey];
+      const startAnchor = activePathKey === 'cuePath' ? 'cue' : 'first';
+      if (path.length === 0) path.push({ anchor: startAnchor });
+      const point = snapPoint(pointer);
+      const previous = path[path.length - 1];
+      if (previous.anchor && point.anchor === previous.anchor) return;
+      path.push(point);
+      markChanged();
+      updateUI();
+      draw();
+    }
+
+    canvas.addEventListener('pointerdown', event => {
+      const pointer = getPointer(event);
+      if (mode !== 'move') {
+        addPathPoint(pointer);
+        return;
+      }
+      draggingBall = hitBall(pointer);
+      if (draggingBall) {
+        canvas.setPointerCapture(event.pointerId);
+        canvas.classList.add('dragging');
+      }
+    });
+
+    canvas.addEventListener('pointermove', event => {
+      if (!draggingBall) return;
+      const coordinate = toCoordinate(getPointer(event).x, getPointer(event).y, boardMetrics());
+      state.balls[draggingBall] = { x: Number(coordinate.x.toFixed(2)), y: Number(coordinate.y.toFixed(2)) };
+      markChanged();
+      updateCoordinates();
+      updateRouteList();
+      draw();
+    });
+
+    function stopDragging(event) {
+      if (!draggingBall) return;
+      draggingBall = null;
+      canvas.classList.remove('dragging');
+      if (event.pointerId !== undefined && canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+    }
+    canvas.addEventListener('pointerup', stopDragging);
+    canvas.addEventListener('pointercancel', stopDragging);
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      if (mode !== 'move') activePathKey = mode;
+      const isPath = mode !== 'move';
+      document.getElementById('moveMode').classList.toggle('active', !isPath);
+      document.getElementById('cuePathMode').classList.toggle('active', mode === 'cuePath');
+      document.getElementById('firstPathMode').classList.toggle('active', mode === 'firstPath');
+      canvas.classList.toggle('path-mode', isPath);
+      const guides = {
+        move: '공을 눌러 원하는 위치로 드래그하세요.',
+        cuePath: '수구 경로: 1적구와 쿠션 지점을 진행 순서대로 클릭하세요.',
+        firstPath: '1적구 경로: 충돌 뒤 1적구가 이동할 지점을 차례로 클릭하세요.'
+      };
+      document.getElementById('modeGuide').textContent = guides[mode];
+      updateUI();
+    }
+
+    function describePoint(point) {
+      if (point.anchor) {
+        if (!point.contact) return ballMeta[point.anchor].name + ' 중심';
+        const { nx, ny } = point.contact;
+        const horizontal = nx < -.35 ? '좌측' : nx > .35 ? '우측' : '';
+        const vertical = ny < -.35 ? '상단' : ny > .35 ? '하단' : '';
+        return `${ballMeta[point.anchor].name} 접촉점 · ${vertical}${horizontal || (!vertical ? '중앙' : '')}`;
+      }
+      const tolerance = .05;
+      if (point.y <= tolerance) return `상단 장쿠션 · X ${point.x.toFixed(1)}`;
+      if (point.y >= 50 - tolerance) return `하단 장쿠션 · X ${point.x.toFixed(1)}`;
+      if (point.x <= tolerance) return `좌측 단쿠션 · Y ${point.y.toFixed(1)}`;
+      if (point.x >= 100 - tolerance) return `우측 단쿠션 · Y ${point.y.toFixed(1)}`;
+      return `테이블 지점 · X ${point.x.toFixed(1)}, Y ${point.y.toFixed(1)}`;
+    }
+
+    function updateCoordinates() {
+      ['cue','first','second'].forEach(key => {
+        const ball = state.balls[key];
+        document.getElementById(key + 'Coord').textContent = `X ${ball.x.toFixed(1)} · Y ${ball.y.toFixed(1)}`;
+      });
+    }
+
+    function updateRouteList() {
+      const list = document.getElementById('routeList');
+      document.getElementById('pointCount').textContent = `수구 ${state.cuePath.length} · 1적구 ${state.firstPath.length}`;
+      if (!state.cuePath.length && !state.firstPath.length) {
+        list.innerHTML = '<li class="empty-route">수구 또는 1적구 경로를 선택해 주세요.</li>';
+        return;
+      }
+      const elements = [];
+      [['cuePath','수구 경로'], ['firstPath','1적구 이동 경로']].forEach(([key, title]) => {
+        const path = state[key];
+        if (!path.length) return;
+        const heading = document.createElement('li');
+        heading.className = 'route-heading';
+        heading.innerHTML = `<span>${title}</span><span>${path.length} POINT</span>`;
+        elements.push(heading);
+        path.forEach((point, index) => {
+          const item = document.createElement('li');
+          if (key === 'firstPath') item.classList.add('first-route');
+          const number = document.createElement('b');
+          const label = document.createElement('span');
+          number.textContent = String(index + 1);
+          label.textContent = describePoint(point);
+          item.append(number, label);
+          elements.push(item);
+        });
+      });
+      list.replaceChildren(...elements);
+    }
+
+    function updateUI() {
+      if (!state.spin) state.spin = { x: 0, y: 0 };
+      if (!state.thickness) state.thickness = { offset: -0.5 };
+      document.getElementById('layoutName').value = state.name;
+      document.getElementById('memo').value = state.memo;
+      document.getElementById('boardTitle').textContent = state.name || '이름 없는 배치';
+      document.getElementById('undoPoint').disabled = state[activePathKey].length === 0;
+      document.getElementById('clearPath').disabled = state[activePathKey].length === 0;
+      document.getElementById('spinReadout').textContent = spinLabel(state.spin);
+      document.getElementById('thicknessReadout').textContent = thicknessInfo(state.thickness).text;
+      updateCoordinates();
+      updateRouteList();
+      drawSpin();
+      drawThickness();
+    }
+
+    function markChanged() {
+      document.getElementById('saveState').classList.remove('saved');
+      document.getElementById('saveText').textContent = '변경 내용이 저장되지 않았습니다';
+    }
+
+    function markSaved(message = '브라우저에 저장되었습니다') {
+      document.getElementById('saveState').classList.add('saved');
+      document.getElementById('saveText').textContent = message;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function safeFilename() {
+      return (state.name.trim() || 'dbilliard-layout').replace(/[\\/:*?"<>|]/g, '-').slice(0, 60);
+    }
+
+    function downloadBlob(blob, filename) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
+    function exportData() {
+      return {
+        ...state,
+        coordinateSystem: { origin: 'top-left', xRange: [0,100], yRange: [0,50], topBottom: 'long-cushion', leftRight: 'short-cushion' },
+        exportedAt: new Date().toISOString()
+      };
+    }
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight, maxLines = 3) {
+      const chars = [...text];
+      let line = '';
+      const lines = [];
+      chars.forEach(char => {
+        const test = line + char;
+        if (context.measureText(test).width > maxWidth && line) { lines.push(line); line = char; } else { line = test; }
+      });
+      if (line) lines.push(line);
+      lines.slice(0, maxLines).forEach((item, index) => context.fillText(item + (index === maxLines - 1 && lines.length > maxLines ? '…' : ''), x, y + index * lineHeight));
+    }
+
+    document.getElementById('moveMode').addEventListener('click', () => setMode('move'));
+    document.getElementById('cuePathMode').addEventListener('click', () => setMode('cuePath'));
+    document.getElementById('firstPathMode').addEventListener('click', () => setMode('firstPath'));
+    document.getElementById('finishPath').addEventListener('click', () => { setMode('move'); showToast('경로 입력을 마쳤습니다.'); });
+    document.getElementById('undoPoint').addEventListener('click', () => { if (state[activePathKey].length) { state[activePathKey].pop(); markChanged(); updateUI(); draw(); } });
+    document.getElementById('clearPath').addEventListener('click', () => { state[activePathKey] = []; markChanged(); updateUI(); draw(); });
+    spinCanvas.addEventListener('pointerdown', event => {
+      spinDragging = true;
+      spinCanvas.setPointerCapture(event.pointerId);
+      setSpinFromPointer(event);
+    });
+    spinCanvas.addEventListener('pointermove', event => { if (spinDragging) setSpinFromPointer(event); });
+    spinCanvas.addEventListener('pointerup', event => {
+      spinDragging = false;
+      if (spinCanvas.hasPointerCapture(event.pointerId)) spinCanvas.releasePointerCapture(event.pointerId);
+    });
+    spinCanvas.addEventListener('pointercancel', () => { spinDragging = false; });
+    document.getElementById('spinReset').addEventListener('click', () => {
+      state.spin = { x: 0, y: 0 };
+      markChanged();
+      updateUI();
+      showToast('당점을 중심으로 초기화했습니다.');
+    });
+    thicknessCanvas.addEventListener('pointerdown', event => {
+      thicknessDragging = true;
+      thicknessCanvas.setPointerCapture(event.pointerId);
+      setThicknessFromPointer(event);
+    });
+    thicknessCanvas.addEventListener('pointermove', event => { if (thicknessDragging) setThicknessFromPointer(event); });
+    thicknessCanvas.addEventListener('pointerup', event => {
+      thicknessDragging = false;
+      if (thicknessCanvas.hasPointerCapture(event.pointerId)) thicknessCanvas.releasePointerCapture(event.pointerId);
+    });
+    thicknessCanvas.addEventListener('pointercancel', () => { thicknessDragging = false; });
+    document.getElementById('thicknessReset').addEventListener('click', () => {
+      state.thickness = { offset: -0.5 };
+      markChanged();
+      updateUI();
+      showToast('1적구 두께를 좌측 1/2로 초기화했습니다.');
+    });
+    document.getElementById('resetAll').addEventListener('click', () => {
+      if (!confirm('공 위치, 경로, 메모를 모두 초기화할까요?')) return;
+      state = defaultState();
+      activePathKey = 'cuePath';
+      setMode('move');
+      markChanged();
+      updateUI();
+      draw();
+    });
+
+    document.getElementById('layoutName').addEventListener('input', event => { state.name = event.target.value; document.getElementById('boardTitle').textContent = state.name || '이름 없는 배치'; markChanged(); });
+    document.getElementById('memo').addEventListener('input', event => { state.memo = event.target.value; markChanged(); });
+    document.getElementById('localSave').addEventListener('click', () => {
+      localStorage.setItem('dbilliard-layout-editor', JSON.stringify(state));
+      markSaved();
+      showToast('현재 배치를 브라우저에 저장했습니다.');
+    });
+    document.getElementById('saveJson').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(exportData(), null, 2)], { type: 'application/json;charset=utf-8' });
+      downloadBlob(blob, safeFilename() + '.json');
+      markSaved('배치 파일로 저장했습니다');
+      showToast('수정 가능한 배치 파일을 저장했습니다.');
+    });
+    document.getElementById('loadJson').addEventListener('click', () => document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change', event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const loaded = JSON.parse(reader.result);
+          if (!loaded.balls || (!loaded.cuePath && !loaded.path)) throw new Error('invalid');
+          state = { version: 6, name: loaded.name || '불러온 배치', memo: loaded.memo || '', balls: loaded.balls, spin: loaded.spin || { x: 0, y: 0 }, thickness: loaded.thickness || { offset: -0.5 }, cuePath: loaded.cuePath || loaded.path || [], firstPath: loaded.firstPath || [] };
+          activePathKey = 'cuePath';
+          setMode('move');
+          updateUI();
+          draw();
+          markSaved('배치 파일을 불러왔습니다');
+          showToast('배치 파일을 불러왔습니다.');
+        } catch (error) { showToast('올바른 D.Billiard 배치 파일이 아닙니다.'); }
+        event.target.value = '';
+      };
+      reader.readAsText(file, 'utf-8');
+    });
+
+    document.getElementById('savePng').addEventListener('click', () => {
+      const output = document.createElement('canvas');
+      output.width = 1400;
+      output.height = 1130;
+      const out = output.getContext('2d');
+      out.fillStyle = '#f5f2e9';
+      out.fillRect(0, 0, output.width, output.height);
+      out.fillStyle = '#087554';
+      out.font = '900 18px system-ui, sans-serif';
+      out.fillText('D.BILLIARD · LAYOUT PATH', 70, 58);
+      out.fillStyle = '#10221c';
+      out.font = '900 48px system-ui, sans-serif';
+      out.fillText(state.name || '이름 없는 배치', 70, 115);
+      drawScene(out, boardMetrics(1260, 661, 70, 150), { clean: true });
+      out.fillStyle = '#087554';
+      out.font = '900 15px system-ui, sans-serif';
+      out.fillText('COACH MEMO', 70, 855);
+      out.fillStyle = '#566760';
+      out.font = '500 20px system-ui, sans-serif';
+      wrapText(out, state.memo || '메모 없음', 70, 893, 850, 31, 5);
+      out.fillStyle = '#087554';
+      out.font = '900 15px system-ui, sans-serif';
+      out.fillText('CUE BALL CONTACT POINT', 930, 855);
+      drawSpinDiagram(out, 1030, 965, 82, state.spin, true);
+      out.fillText('1ST BALL THICKNESS', 1160, 855);
+      drawThicknessDiagram(out, 1260, 955, 62, state.thickness, true);
+      out.fillStyle = '#566760';
+      out.font = '700 13px system-ui, sans-serif';
+      out.textAlign = 'center';
+      out.fillText(spinLabel(state.spin), 1030, 1070);
+      out.fillText(thicknessInfo(state.thickness).text, 1260, 1070);
+      out.textAlign = 'left';
+      output.toBlob(blob => {
+        if (!blob) return;
+        downloadBlob(blob, safeFilename() + '.png');
+        markSaved('PNG 이미지로 저장했습니다');
+        showToast('공 위치와 경로를 PNG로 저장했습니다.');
+      }, 'image/png');
+    });
+
+    try {
+      const saved = localStorage.getItem('dbilliard-layout-editor');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.balls && (parsed.cuePath || parsed.path)) {
+          state = { version: 6, name: parsed.name || '저장된 배치', memo: parsed.memo || '', balls: parsed.balls, spin: parsed.spin || { x: 0, y: 0 }, thickness: parsed.thickness || { offset: -0.5 }, cuePath: parsed.cuePath || parsed.path || [], firstPath: parsed.firstPath || [] };
+          markSaved('저장된 배치를 불러왔습니다');
+        }
+      }
+    } catch (error) { /* 손상된 로컬 저장값은 기본 배치로 시작 */ }
+
+    updateUI();
+    setMode('move');
+    new ResizeObserver(resizeCanvas).observe(canvas);
+    new ResizeObserver(resizeSpinCanvas).observe(spinCanvas);
+    new ResizeObserver(resizeThicknessCanvas).observe(thicknessCanvas);
+  </script>
+</body>
+</html>
