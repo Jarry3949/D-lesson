@@ -211,6 +211,7 @@
     .principle-visual-head span { color: var(--green); font-size: 10px; font-weight: 900; letter-spacing: .12em; }
       .principle-visual-canvas { overflow: hidden; border: 1px solid rgba(16,34,28,.1); border-radius: 14px; background: white; }
     .principle-visual-canvas svg { width: 100%; height: auto; }
+    .principle-photo { display: block; width: min(100%, 624px); height: auto; margin: 0 auto; object-fit: contain; background: #fff; }
     .principle-visual-note { margin: 13px 2px 0; color: var(--ink-soft); font-size: 11px; }
     .principle-diagram text { fill: var(--ink); font-family: Pretendard, "Noto Sans KR", sans-serif; }
     .principle-diagram .d-title { font-size: 18px; font-weight: 900; }
@@ -1082,7 +1083,7 @@
     ];
 
     const principleVisualMeta = [
-      { title: '큐선에 들어가는 기본자세', note: '참고 블로그의 입문 순서를 바탕으로 새로 그린 도해입니다. 위에서 볼 때 비전센터–큐–목표선, 발 배치, 옆에서 볼 때 약 15cm 브리지와 임팩트 부근 전완 수직을 한 번에 확인합니다. 45°·15cm·90°는 개인 체형에 맞춰 조절하는 출발 기준입니다.' },
+      { title: '당구 기본자세 · 네 방향', note: '폴더의 기본자세.png 원본입니다. 옆·위·뒤·정면에서 본 자세를 비교해 상체 높이, 다리 간격, 앞팔과 그립 팔의 위치를 확인합니다.' },
       { title: '오픈 브리지 4단계와 상황별 형태', note: '손가락을 넓게 펴 지지면을 만들고, 엄지와 검지 사이 V홈을 세운 뒤 큐를 올리는 과정을 순서대로 표시했습니다. 아래에는 릴랙스 그립·클로즈드·레일 브리지를 비교했습니다.' },
       { title: '5가지 스트로크의 실행 범위', note: '팔로스루 길이는 레슨용 실행 기준입니다. 공의 결과를 직접 결정하는 것은 임팩트 순간의 큐 방향·당점·속도이며, 숫자로 고정된 피니시 거리는 없습니다.' },
       { title: '4/8의 33.7°·42°·60°를 구분하는 법', note: '각도는 모두 충돌 전 수구 입사선을 0°로 재었습니다. 60°는 스턴 접선, 33.7°는 완전 자연 구름의 이상적 최종선, 42°는 부분 미끄럼이나 곡선 중간 구간에서 나타나는 실전 기준입니다. 아래 8분할 표의 파란 각도는 비교용 자연 구름 이상값입니다.' },
@@ -1152,7 +1153,7 @@
       <line class="d-guide" x1="952" y1="286" x2="952" y2="455"/><path d="M922 316 A30 30 0 0 1 952 346" fill="none" stroke="#d85849" stroke-width="4"/><text x="904" y="367" fill="#d85849" font-size="21" font-weight="900">90°</text>
       <line x1="974" y1="506" x2="1008" y2="506" stroke="#087554" stroke-width="3"/><path d="M974 499 L974 513 M1008 499 L1008 513" stroke="#087554" stroke-width="3"/><text class="d-tiny" x="952" y="535">약 15cm</text><text class="d-small" x="770" y="579">전완은 임팩트 부근 수직 · 앞팔은 편안히 폅니다.</text>`);
 
-    const stanceDiagram = () => diagramSvg('블로그 기본자세를 사람 형태로 다시 그린 네 방향 자세', 720, `
+    const stanceDiagramIllustrated = () => diagramSvg('블로그 기본자세를 사람 형태로 다시 그린 네 방향 자세', 720, `
       <rect class="d-panel" x="25" y="25" width="510" height="320" rx="18"/><rect class="d-panel" x="565" y="25" width="510" height="320" rx="18"/><rect class="d-panel" x="25" y="375" width="510" height="320" rx="18"/><rect class="d-panel" x="565" y="375" width="510" height="320" rx="18"/>
 
       <g aria-label="옆에서 본 자세">
@@ -1196,6 +1197,8 @@
         <path d="M790 587 Q759 603 747 642" fill="none" stroke="#4b6159" stroke-width="29" stroke-linecap="round"/><path d="M850 587 Q881 603 893 642" fill="none" stroke="#4b6159" stroke-width="29" stroke-linecap="round"/><path d="M724 643 Q746 635 768 645 L770 657 L718 658 Z" fill="#263a33"/><path d="M871 645 Q894 635 916 643 L922 658 L870 657 Z" fill="#263a33"/>
         <path d="M801 535 L806 607" fill="none" stroke="#f1d4b8" stroke-width="18" stroke-linecap="round"/><circle cx="806" cy="608" r="8" fill="#087554"/><path d="M860 537 Q892 549 898 579" fill="none" stroke="#10221c" stroke-width="3"/>
       </g>`);
+
+    const stanceDiagram = () => `<img class="principle-photo" src="./basic-stance.png" alt="옆, 위, 뒤, 정면에서 본 당구 기본자세" loading="eager" decoding="async">`;
 
     const bridgeDiagram = () => {
       const step = (x,title,sub,art) => `<g transform="translate(${x} 25)"><rect class="d-panel" width="245" height="275" rx="16"/><circle cx="28" cy="28" r="16" fill="#087554"/><text x="23" y="34" fill="#ffffff" font-size="16" font-weight="900">${title}</text><text class="d-label" x="52" y="33">${sub}</text>${art}</g>`;
