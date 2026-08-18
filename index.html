@@ -212,6 +212,35 @@
       .principle-visual-canvas { overflow: hidden; border: 1px solid rgba(16,34,28,.1); border-radius: 14px; background: white; }
     .principle-visual-canvas svg { width: 100%; height: auto; }
     .principle-photo { display: block; width: min(100%, 624px); height: auto; margin: 0 auto; object-fit: contain; background: #fff; }
+    .stance-viewer { padding: 18px; background: linear-gradient(145deg, #fbfdfc 0%, #edf5f1 100%); }
+    .stance-switcher { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-bottom: 14px; }
+    .stance-view-btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 12px; border: 1px solid rgba(16,34,28,.12); border-radius: 11px; background: rgba(255,255,255,.72); color: var(--ink-soft); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease; }
+    .stance-view-btn span { color: var(--green); font-family: Georgia, serif; font-size: 10px; }
+    .stance-view-btn:hover { border-color: rgba(8,117,84,.38); transform: translateY(-1px); }
+    .stance-view-btn[aria-selected="true"] { border-color: var(--green); background: var(--green); color: white; box-shadow: 0 8px 20px rgba(8,117,84,.18); }
+    .stance-view-btn[aria-selected="true"] span { color: var(--lime); }
+    .stance-stage { display: grid; grid-template-columns: minmax(0,1.55fr) minmax(220px,.65fr); min-height: 440px; overflow: hidden; border-radius: 18px; background: #0d322a; box-shadow: 0 14px 32px rgba(13,50,42,.14); }
+    .stance-stage-visual { display: grid; place-items: center; min-width: 0; padding: 12px; background: radial-gradient(circle at 50% 40%, rgba(88,191,158,.13), transparent 50%), #0d322a; }
+    .stance-stage-visual .stance-figure { width: 100%; max-width: 760px; height: auto; }
+    .stance-view-copy { display: flex; flex-direction: column; justify-content: center; padding: 30px 25px; border-left: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.08); color: white; }
+    .stance-view-copy small { color: var(--lime); font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+    .stance-view-copy h5 { margin: 10px 0 9px; font-size: 22px; line-height: 1.2; letter-spacing: -.035em; }
+    .stance-view-copy > p { margin: 0; color: rgba(255,255,255,.68); font-size: 12px; line-height: 1.65; }
+    .stance-points { display: grid; gap: 12px; margin: 22px 0 0; padding: 0; list-style: none; }
+    .stance-points li { position: relative; padding-left: 15px; color: rgba(255,255,255,.88); font-size: 11px; line-height: 1.55; }
+    .stance-points li::before { content: ""; position: absolute; top: .58em; left: 0; width: 5px; height: 5px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px rgba(201,242,105,.09); }
+    .stance-key { display: flex; align-items: center; gap: 9px; margin-top: auto; padding-top: 24px; color: rgba(255,255,255,.58); font-size: 10px; font-weight: 800; }
+    .stance-key::before { content: ""; width: 28px; height: 1px; background: var(--lime); }
+    .stance-figure .sv-guide { fill: none; stroke: #d7ff78; stroke-width: 2; stroke-dasharray: 7 7; }
+    .stance-figure .sv-cue { fill: none; stroke: #d7ff78; stroke-width: 7; stroke-linecap: round; }
+    .stance-figure .sv-skin { fill: none; stroke: #efc5a8; stroke-width: 25; stroke-linecap: round; stroke-linejoin: round; }
+    .stance-figure .sv-shirt { fill: #63c6a7; stroke: #d5fff0; stroke-width: 2.5; }
+    .stance-figure .sv-pants { fill: none; stroke: #dce9e4; stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; }
+    .stance-figure .sv-shoe { fill: #a5beb5; }
+    .stance-figure .sv-joint { fill: #0d322a; stroke: #d7ff78; stroke-width: 3; }
+    .stance-figure .sv-label { fill: #eafff7; font-family: Pretendard, "Noto Sans KR", sans-serif; font-size: 15px; font-weight: 800; }
+    .stance-figure .sv-caption { fill: #9bc2b5; font-family: Pretendard, "Noto Sans KR", sans-serif; font-size: 12px; font-weight: 700; }
+    .stance-figure .sv-angle { fill: #d7ff78; font-family: Georgia, serif; font-size: 20px; font-weight: 700; }
     .principle-visual-note { margin: 13px 2px 0; color: var(--ink-soft); font-size: 11px; }
     .principle-diagram text { fill: var(--ink); font-family: Pretendard, "Noto Sans KR", sans-serif; }
     .principle-diagram .d-title { font-size: 18px; font-weight: 900; }
@@ -554,6 +583,15 @@
       .principle-visual-head span::after { content: " · 좌우로 밀어 보기"; }
       .principle-visual-canvas { overflow-x: auto; }
       .principle-visual-canvas svg { width: 760px; max-width: none; }
+      .principle-visual:has(.stance-viewer) .principle-visual-head span::after { content: " · 방향 선택"; }
+      .stance-viewer { min-width: 0; padding: 10px; }
+      .stance-switcher { grid-template-columns: repeat(4, minmax(88px,1fr)); overflow-x: auto; padding-bottom: 3px; }
+      .stance-stage { grid-template-columns: 1fr; min-height: 0; }
+      .stance-stage-visual { min-height: 330px; padding: 6px; }
+      .stance-stage-visual .stance-figure { width: 100%; max-width: 100%; }
+      .stance-view-copy { padding: 24px 20px; border-top: 1px solid rgba(255,255,255,.1); border-left: 0; }
+      .stance-view-copy h5 { font-size: 20px; }
+      .stance-key { margin-top: 18px; padding-top: 0; }
       .principle-baseline { grid-template-columns: 1fr; gap: 7px; }
       .principle-grid { grid-template-columns: 1fr; }
       .principle-block.wide { grid-column: auto; }
@@ -1083,7 +1121,7 @@
     ];
 
     const principleVisualMeta = [
-      { title: '당구 기본자세 · 네 방향', note: '폴더의 기본자세.png 원본입니다. 옆·위·뒤·정면에서 본 자세를 비교해 상체 높이, 다리 간격, 앞팔과 그립 팔의 위치를 확인합니다.' },
+      { title: '당구의 기본자세', note: '당구에서 가장 표준이 되는 자세를 방향별로 확인해보세요. 체형에 따라 세부 각도는 달라질 수 있지만, 큐선·시선·균형의 기준은 동일합니다.' },
       { title: '오픈 브리지 4단계와 상황별 형태', note: '손가락을 넓게 펴 지지면을 만들고, 엄지와 검지 사이 V홈을 세운 뒤 큐를 올리는 과정을 순서대로 표시했습니다. 아래에는 릴랙스 그립·클로즈드·레일 브리지를 비교했습니다.' },
       { title: '5가지 스트로크의 실행 범위', note: '팔로스루 길이는 레슨용 실행 기준입니다. 공의 결과를 직접 결정하는 것은 임팩트 순간의 큐 방향·당점·속도이며, 숫자로 고정된 피니시 거리는 없습니다.' },
       { title: '4/8의 33.7°·42°·60°를 구분하는 법', note: '각도는 모두 충돌 전 수구 입사선을 0°로 재었습니다. 60°는 스턴 접선, 33.7°는 완전 자연 구름의 이상적 최종선, 42°는 부분 미끄럼이나 곡선 중간 구간에서 나타나는 실전 기준입니다. 아래 8분할 표의 파란 각도는 비교용 자연 구름 이상값입니다.' },
@@ -1198,7 +1236,92 @@
         <path d="M801 535 L806 607" fill="none" stroke="#f1d4b8" stroke-width="18" stroke-linecap="round"/><circle cx="806" cy="608" r="8" fill="#087554"/><path d="M860 537 Q892 549 898 579" fill="none" stroke="#10221c" stroke-width="3"/>
       </g>`);
 
-    const stanceDiagram = () => `<img class="principle-photo" src="./basic-stance.png" alt="옆, 위, 뒤, 정면에서 본 당구 기본자세" loading="eager" decoding="async">`;
+    const stanceSvg = (title, desc, content) => `<svg class="stance-figure" viewBox="0 0 720 460" role="img" aria-label="${title}"><title>${title}</title><desc>${desc}</desc><defs><linearGradient id="stance-shirt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#78ddbd"/><stop offset="1" stop-color="#389b80"/></linearGradient><filter id="stance-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#041b16" flood-opacity=".32"/></filter></defs>${content}</svg>`;
+
+    const stanceViews = {
+      side: {
+        no: 'VIEW 01 · SIDE', title: '큐를 낮고 수평에 가깝게', lead: '옆에서는 상체의 기울기와 그립 팔의 수직 관계를 가장 쉽게 확인할 수 있습니다.', key: '기울기 · 전완 · 무릎',
+        points: ['상체는 허리를 둥글게 말기보다 고관절에서 앞으로 기울입니다.','임팩트 부근에서 그립 손이 팔꿈치 아래에 오도록 맞춥니다.','양 무릎을 가볍게 굽혀 샷이 끝날 때까지 중심을 고정합니다.'],
+        svg: stanceSvg('측면에서 본 당구 기본자세','상체 기울기, 전완 수직, 무릎 굽힘과 수평 큐선을 표시한 측면 자세',`
+          <rect x="12" y="12" width="696" height="436" rx="26" fill="#0d322a"/><path d="M35 345 H685" stroke="#2a6657" stroke-width="2"/><path d="M35 250 H685" class="sv-guide"/><text x="47" y="237" class="sv-caption">수평에 가까운 큐선</text>
+          <path d="M72 250 H650" class="sv-cue"/><circle cx="655" cy="250" r="17" fill="#fffdf4" stroke="#d7ff78" stroke-width="4"/>
+          <path d="M277 222 Q306 166 382 166 Q418 167 447 194 L402 243 Q345 257 284 244 Z" fill="url(#stance-shirt)" stroke="#d5fff0" stroke-width="3" filter="url(#stance-shadow)"/>
+          <ellipse cx="456" cy="164" rx="35" ry="42" transform="rotate(24 456 164)" fill="#efc5a8" stroke="#f8e0d0" stroke-width="2"/><path d="M430 143 Q450 118 480 135" fill="#173f36"/><circle cx="476" cy="169" r="4" fill="#0d322a"/>
+          <path d="M405 196 Q457 205 502 234 L566 247" class="sv-skin"/><circle cx="570" cy="248" r="11" class="sv-joint"/>
+          <path d="M315 185 Q278 174 259 201 L250 247" class="sv-skin"/><path d="M250 247 L223 250" class="sv-skin"/><circle cx="224" cy="250" r="11" class="sv-joint"/>
+          <path d="M303 238 Q276 277 239 326" class="sv-pants"/><path d="M330 239 Q360 279 405 324" class="sv-pants"/><path d="M209 326 Q239 317 267 332 L263 348 H202 Z" class="sv-shoe"/><path d="M381 324 Q409 318 431 337 L425 349 H374 Z" class="sv-shoe"/>
+          <path d="M450 122 L333 269" class="sv-guide"/><path d="M288 183 V252" class="sv-guide"/><path d="M258 204 A32 32 0 0 0 288 234" fill="none" stroke="#d7ff78" stroke-width="3"/><text x="249" y="193" class="sv-angle">90°</text>
+          <path d="M238 365 L328 275 L409 365 Z" fill="rgba(215,255,120,.06)" stroke="#5b9f8d" stroke-width="2" stroke-dasharray="6 6"/><text x="268" y="397" class="sv-label">안정적인 지지 삼각형</text>`)
+      },
+      top: {
+        no: 'VIEW 02 · TOP', title: '눈–큐–목표선을 하나로', lead: '위에서는 몸이 큐의 통로를 막지 않는지, 발과 어깨가 목표선에 어떻게 놓이는지 확인합니다.', key: '비전센터 · 큐 통로 · 발 배치',
+        points: ['큐선이 개인의 비전센터 아래를 지나 목표점까지 곧게 이어지게 합니다.','몸통은 큐선 한쪽에 여유를 두어 그립 손의 왕복 통로를 확보합니다.','앞발과 뒷발이 만드는 지지면 안에 몸의 중심이 들어오게 합니다.'],
+        svg: stanceSvg('위에서 본 당구 기본자세','비전센터와 큐선, 몸통의 오프셋, 발 배치를 표시한 위쪽 자세',`
+          <rect x="12" y="12" width="696" height="436" rx="26" fill="#0d322a"/><rect x="70" y="35" width="580" height="390" rx="24" fill="#123e34" stroke="#2c6c5c" stroke-width="2"/>
+          <path d="M360 50 V415" class="sv-guide"/><path d="M360 64 V406" class="sv-cue"/><circle cx="360" cy="67" r="17" fill="#fffdf4" stroke="#d7ff78" stroke-width="4"/>
+          <path d="M294 252 Q304 204 355 187 Q416 197 437 248 L419 337 Q360 365 310 329 Z" fill="url(#stance-shirt)" stroke="#d5fff0" stroke-width="3" filter="url(#stance-shadow)"/>
+          <ellipse cx="360" cy="184" rx="39" ry="35" fill="#efc5a8" stroke="#f8e0d0" stroke-width="2"/><path d="M326 183 Q336 149 370 151 Q394 153 398 177" fill="#173f36"/>
+          <path d="M320 227 Q300 181 325 136 L349 103" class="sv-skin"/><circle cx="351" cy="101" r="11" class="sv-joint"/>
+          <path d="M419 226 Q474 227 491 273 L455 324" class="sv-skin"/><circle cx="454" cy="326" r="11" class="sv-joint"/>
+          <path d="M322 334 L263 393" class="sv-pants"/><path d="M402 337 L465 390" class="sv-pants"/><path d="M232 397 Q259 380 286 392 L281 415 H225 Z" class="sv-shoe"/><path d="M442 391 Q468 381 494 398 L493 416 H438 Z" class="sv-shoe"/>
+          <circle cx="360" cy="190" r="9" fill="none" stroke="#d7ff78" stroke-width="3"/><path d="M404 158 L370 184" stroke="#d7ff78" stroke-width="2"/><text x="410" y="157" class="sv-label">비전센터</text>
+          <path d="M251 417 L360 270 L482 417 Z" fill="rgba(215,255,120,.055)" stroke="#5b9f8d" stroke-width="2" stroke-dasharray="6 6"/><text x="81" y="402" class="sv-caption">몸은 큐의 왕복 통로 밖으로</text>`)
+      },
+      rear: {
+        no: 'VIEW 03 · REAR', title: '어깨보다 안정이 우선', lead: '뒤에서는 양발과 무릎의 균형, 골반과 등의 중심, 그립 팔의 왕복 통로를 확인합니다.', key: '중심축 · 하체 균형 · 팔 통로',
+        points: ['발 간격은 몸통 폭을 출발점으로 삼고 체형에 맞게 조절합니다.','무릎은 잠그지 않고 양쪽 높이가 크게 무너지지 않게 유지합니다.','큐가 옆구리나 가슴에 걸리지 않는 여유 공간을 남깁니다.'],
+        svg: stanceSvg('뒤에서 본 당구 기본자세','양발과 무릎의 균형, 몸의 중심축과 큐 통로를 표시한 뒤쪽 자세',`
+          <rect x="12" y="12" width="696" height="436" rx="26" fill="#0d322a"/><path d="M40 402 H680" stroke="#2a6657" stroke-width="2"/><path d="M360 43 V414" class="sv-guide"/><path d="M360 55 V282" class="sv-cue"/><circle cx="360" cy="58" r="17" fill="#fffdf4" stroke="#d7ff78" stroke-width="4"/>
+          <ellipse cx="360" cy="177" rx="37" ry="34" fill="#efc5a8" stroke="#f8e0d0" stroke-width="2"/><path d="M326 174 Q338 143 369 145 Q395 148 398 174" fill="#173f36"/>
+          <path d="M284 209 Q360 167 436 209 L424 300 Q362 328 296 300 Z" fill="url(#stance-shirt)" stroke="#d5fff0" stroke-width="3" filter="url(#stance-shadow)"/>
+          <path d="M300 224 Q258 244 253 294" class="sv-skin"/><path d="M420 224 Q462 245 467 294" class="sv-skin"/><circle cx="253" cy="296" r="10" class="sv-joint"/><circle cx="467" cy="296" r="10" class="sv-joint"/>
+          <path d="M315 299 Q278 332 250 385" class="sv-pants"/><path d="M405 299 Q444 332 470 385" class="sv-pants"/><path d="M216 384 Q247 376 273 392 L270 410 H210 Z" class="sv-shoe"/><path d="M446 392 Q472 376 502 385 L506 410 H446 Z" class="sv-shoe"/>
+          <path d="M251 424 L360 289 L470 424 Z" fill="rgba(215,255,120,.055)" stroke="#5b9f8d" stroke-width="2" stroke-dasharray="6 6"/><path d="M320 211 H400" stroke="#d7ff78" stroke-width="3"/><text x="409" y="216" class="sv-caption">어깨선은 편안하게</text><text x="58" y="69" class="sv-label">몸의 중심축</text><path d="M148 64 H340" stroke="#d7ff78" stroke-width="2"/>`)
+      },
+      front: {
+        no: 'VIEW 04 · FRONT', title: '머리와 큐의 중심 확인', lead: '정면에서는 머리 아래로 큐가 곧게 보이는지, 양발과 무릎이 안정적인 중심을 만드는지 확인합니다.', key: '머리 위치 · 큐선 · 좌우 균형',
+        points: ['고개를 억지로 비틀지 않고 개인의 조준 중심이 큐 위에 오게 합니다.','브리지 팔은 목표 방향으로 편안히 펴고 어깨는 과하게 끌어올리지 않습니다.','샷 뒤에도 발과 머리 위치가 유지되면 안정된 자세입니다.'],
+        svg: stanceSvg('정면에서 본 당구 기본자세','머리와 큐의 중심 정렬, 브리지 팔, 좌우 하체 균형을 표시한 정면 자세',`
+          <rect x="12" y="12" width="696" height="436" rx="26" fill="#0d322a"/><path d="M40 402 H680" stroke="#2a6657" stroke-width="2"/><path d="M360 53 V430" class="sv-guide"/><path d="M360 188 V430" class="sv-cue"/><circle cx="360" cy="427" r="17" fill="#fffdf4" stroke="#d7ff78" stroke-width="4"/>
+          <ellipse cx="360" cy="154" rx="39" ry="36" fill="#efc5a8" stroke="#f8e0d0" stroke-width="2"/><path d="M326 151 Q336 120 369 120 Q397 123 400 149" fill="#173f36"/><circle cx="347" cy="157" r="3.5" fill="#0d322a"/><circle cx="373" cy="157" r="3.5" fill="#0d322a"/>
+          <path d="M292 207 Q360 166 429 207 L414 303 Q360 328 306 303 Z" fill="url(#stance-shirt)" stroke="#d5fff0" stroke-width="3" filter="url(#stance-shadow)"/>
+          <path d="M314 213 Q289 234 288 274" class="sv-skin"/><path d="M407 213 Q432 234 433 274" class="sv-skin"/><path d="M342 213 L349 312" class="sv-skin"/><circle cx="349" cy="315" r="11" class="sv-joint"/>
+          <path d="M316 302 Q279 334 252 385" class="sv-pants"/><path d="M404 302 Q442 334 468 385" class="sv-pants"/><path d="M216 385 Q247 376 273 392 L270 410 H210 Z" class="sv-shoe"/><path d="M445 392 Q472 376 501 385 L506 410 H446 Z" class="sv-shoe"/>
+          <circle cx="360" cy="160" r="9" fill="none" stroke="#d7ff78" stroke-width="3"/><path d="M410 130 L370 154" stroke="#d7ff78" stroke-width="2"/><text x="418" y="128" class="sv-label">시선 중심</text>
+          <path d="M252 422 L360 285 L468 422 Z" fill="rgba(215,255,120,.055)" stroke="#5b9f8d" stroke-width="2" stroke-dasharray="6 6"/><path d="M324 347 H396" stroke="#d7ff78" stroke-width="3"/><text x="407" y="352" class="sv-caption">좌우 균형</text>`)
+      }
+    };
+
+    const stanceDiagram = () => `<div class="stance-viewer" data-stance-viewer><div class="stance-switcher" role="tablist" aria-label="기본자세 방향 선택"><button class="stance-view-btn" type="button" role="tab" aria-selected="true" data-stance="side"><span>01</span>측면</button><button class="stance-view-btn" type="button" role="tab" aria-selected="false" data-stance="top"><span>02</span>위에서</button><button class="stance-view-btn" type="button" role="tab" aria-selected="false" data-stance="rear"><span>03</span>뒤에서</button><button class="stance-view-btn" type="button" role="tab" aria-selected="false" data-stance="front"><span>04</span>정면</button></div><div class="stance-stage" id="stanceStage"><div class="stance-stage-visual" data-stance-visual>${stanceViews.side.svg}</div><div class="stance-view-copy"><small data-stance-no>${stanceViews.side.no}</small><h5 data-stance-title>${stanceViews.side.title}</h5><p data-stance-lead>${stanceViews.side.lead}</p><ul class="stance-points" data-stance-points>${stanceViews.side.points.map(point => `<li>${point}</li>`).join('')}</ul><div class="stance-key" data-stance-key>${stanceViews.side.key}</div></div></div></div>`;
+
+    const initStanceViewer = () => {
+      const root = document.querySelector('[data-stance-viewer]');
+      if (!root) return;
+      const buttons = [...root.querySelectorAll('[data-stance]')];
+      const activate = (key, focus = false) => {
+        const view = stanceViews[key];
+        if (!view) return;
+        buttons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.stance === key)));
+        root.querySelector('[data-stance-visual]').innerHTML = view.svg;
+        root.querySelector('[data-stance-no]').textContent = view.no;
+        root.querySelector('[data-stance-title]').textContent = view.title;
+        root.querySelector('[data-stance-lead]').textContent = view.lead;
+        root.querySelector('[data-stance-points]').innerHTML = view.points.map(point => `<li>${point}</li>`).join('');
+        root.querySelector('[data-stance-key]').textContent = view.key;
+        if (focus) buttons.find(button => button.dataset.stance === key)?.focus();
+      };
+      buttons.forEach((button, index) => {
+        button.addEventListener('click', () => activate(button.dataset.stance));
+        button.addEventListener('keydown', (event) => {
+          if (!['ArrowLeft','ArrowRight'].includes(event.key)) return;
+          event.preventDefault();
+          const nextIndex = event.key === 'ArrowRight' ? (index + 1) % buttons.length : (index - 1 + buttons.length) % buttons.length;
+          activate(buttons[nextIndex].dataset.stance, true);
+        });
+      });
+      const requestedView = new URLSearchParams(window.location.search).get('stance');
+      if (requestedView && stanceViews[requestedView]) activate(requestedView);
+    };
 
     const bridgeDiagram = () => {
       const step = (x,title,sub,art) => `<g transform="translate(${x} 25)"><rect class="d-panel" width="245" height="275" rx="16"/><circle cx="28" cy="28" r="16" fill="#087554"/><text x="23" y="34" fill="#ffffff" font-size="16" font-weight="900">${title}</text><text class="d-label" x="52" y="33">${sub}</text>${art}</g>`;
@@ -1401,6 +1524,7 @@
       document.getElementById('principleBaseline').textContent = data.baseline;
       document.getElementById('principleVisualTitle').textContent = principleVisualMeta[index].title;
       document.getElementById('principleVisualCanvas').innerHTML = getPrincipleVisual(index);
+      if (index === 0) initStanceViewer();
       document.getElementById('principleVisualNote').textContent = principleVisualMeta[index].note;
       document.getElementById('principlePhysics').textContent = data.physics;
       document.getElementById('principleCoach').textContent = data.coach;
